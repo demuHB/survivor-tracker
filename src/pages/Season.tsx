@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Calendar, Check, CheckCheck, ChevronRight, Clock, ExternalLink, Eye, Gavel, Gem, Link2, Lock, MapPin,
-  MessageSquare, Shield, Skull, Sparkles, Star, Users,
+  MessageSquare, NotebookPen, Shield, Skull, Sparkles, Star, Users,
 } from 'lucide-react'
 import { formatDate, isReunion, shortName, useSeason } from '../lib/data'
 import { computeStateAt } from '../lib/spoilerState'
@@ -73,10 +73,10 @@ function SeasonView({ season }: { season: SeasonData }) {
             <img key={c.id} src={c.image!} referrerPolicy="no-referrer" alt="" className="h-full w-1/6 object-cover object-top opacity-40 mix-blend-luminosity" />
           ))}
         </div>
-        <div className="relative space-y-4 p-6 md:p-10">
+        <div className="relative space-y-4 p-5 sm:p-6 md:p-10">
           <Link to="/" className="inline-flex items-center gap-1 text-sm text-stone-400 hover:text-white"><ArrowLeft size={16} /> Alle Staffeln</Link>
           <div className="flex flex-wrap items-end gap-4">
-            <span className="font-display text-8xl leading-none text-gradient">{n}</span>
+            <span className="font-display text-7xl leading-none text-gradient sm:text-8xl">{n}</span>
             <div className="pb-2">
               <h1 className="font-display text-4xl tracking-wide md:text-5xl">{shortName(season.name)}</h1>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-300">
@@ -88,7 +88,7 @@ function SeasonView({ season }: { season: SeasonData }) {
           </div>
           <p className="max-w-2xl text-sm text-stone-400">{season.tribeSetup}</p>
           <div className="flex flex-wrap items-center gap-4">
-            <div className="w-64">
+            <div className="w-full sm:w-64">
               <div className="flex justify-between text-xs text-stone-400"><span>Fortschritt</span><span>{watched.filter(w => mainEps.some(e => e.n === w)).length}/{mainEps.length}</span></div>
               <Progress value={watched.filter(w => mainEps.some(e => e.n === w)).length / mainEps.length} />
             </div>
@@ -121,11 +121,15 @@ function SeasonView({ season }: { season: SeasonData }) {
 
       <EpisodeStrip season={season} watched={watched} viewEp={viewEp} onView={setView} onMarkUpTo={markUpTo} onToggle={ep => toggleWatched(n, ep)} />
 
+      {season.episodes.some(e => e.n === horizon + 1) && (
+        <NextEpisodeNotes key={horizon + 1} season={season} ep={season.episodes.find(e => e.n === horizon + 1)!} onWatched={() => markUpTo(horizon + 1)} />
+      )}
+
       {/* Status bar */}
-      <div className="glass flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3 text-sm">
-        <span className="flex items-center gap-2">
-          <Eye size={16} className="text-ember" />
-          {viewEp === 0 ? <>Stand <b>vor Folge 1</b></> : <>Stand nach <b>Folge {viewEp}</b>{viewEpisode && <span className="text-stone-400">„{viewEpisode.title}“</span>}</>}
+      <div className="glass flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3 text-sm sm:gap-x-6 sm:px-5">
+        <span className="flex min-w-0 basis-full items-center gap-2 sm:basis-auto">
+          <Eye size={16} className="shrink-0 text-ember" />
+          {viewEp === 0 ? <>Stand <b>vor Folge 1</b></> : <>Stand nach <b>Folge {viewEp}</b>{viewEpisode && <span className="truncate text-stone-400">„{viewEpisode.title}“</span>}</>}
         </span>
         <span className="text-stone-400">Im Spiel: <b className="text-white">{inGameCount}</b></span>
         <span className="text-stone-400">Raus: <b className="text-white">{state.eliminated.length}</b></span>
@@ -224,11 +228,11 @@ function EpisodeStrip({ season, watched, viewEp, onView, onMarkUpTo, onToggle }:
 
   return (
     <section>
-      <div className="mb-2 flex items-center gap-3">
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2 className="font-display text-2xl tracking-wide">Folgen</h2>
-        <span className="text-xs text-stone-500">Klick = Stand anzeigen · Haken = gesehen</span>
+        <span className="hidden text-xs text-stone-500 sm:inline">Klick = Stand anzeigen · Haken = gesehen</span>
         {next && (
-          <button onClick={() => onMarkUpTo(next.n)} className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-ember to-flame px-3 py-1.5 text-sm font-bold text-stone-950 shadow-lg shadow-ember/20">
+          <button onClick={() => onMarkUpTo(next.n)} className="ml-auto inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-r from-ember to-flame px-3 py-1.5 text-sm font-bold text-stone-950 shadow-lg shadow-ember/20">
             <Check size={15} /> {isReunion(next.label) ? "Reunion" : `Folge ${next.n}`} gesehen
           </button>
         )}
@@ -284,6 +288,7 @@ function EpisodeStrip({ season, watched, viewEp, onView, onMarkUpTo, onToggle }:
 function EpisodePanel({ season, ep }: { season: SeasonData; ep: EpisodeInfo }) {
   const k = epKey(season.season, ep.n)
   const rating = useUserStore(s => s.ratings[k])
+  const draft = useUserStore(s => s.drafts[k])
   const rate = useUserStore(s => s.rate)
   const clearRating = useUserStore(s => s.clearRating)
   const threadLink = useUserStore(s => s.threadLinks[k])
@@ -307,7 +312,12 @@ function EpisodePanel({ season, ep }: { season: SeasonData; ep: EpisodeInfo }) {
       <div className="space-y-5 p-5">
         <div>
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold"><Star size={15} className="text-flame" /> Deine Bewertung</div>
-          <RatingInput value={rating} onSave={(s, t) => rate(season.season, ep.n, s, t)} onClear={() => clearRating(season.season, ep.n)} />
+          {/* notes written while watching prefill the text until the episode is rated */}
+          <RatingInput
+            value={rating ?? (draft ? { score: 0, text: draft.text, updatedAt: draft.updatedAt } : undefined)}
+            onSave={(s, t) => rate(season.season, ep.n, s, t)}
+            onClear={rating ? () => clearRating(season.season, ep.n) : undefined}
+          />
         </div>
         <div>
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold"><MessageSquare size={15} className="text-[#ff4500]" /> Reddit-Diskussion</div>
@@ -353,3 +363,66 @@ function EpisodePanel({ season, ep }: { season: SeasonData; ep: EpisodeInfo }) {
   )
 }
 
+
+/** Notes for the episode currently being watched – shows no game state, so nothing is spoiled. */
+function NextEpisodeNotes({ season, ep, onWatched }: { season: SeasonData; ep: EpisodeInfo; onWatched: () => void }) {
+  const k = epKey(season.season, ep.n)
+  const stored = useUserStore(s => s.drafts[k]?.text ?? '')
+  const setDraft = useUserStore(s => s.setDraft)
+  const hideTitles = useUserStore(s => s.hideUnwatchedTitles)
+  const [text, setText] = useState(stored)
+  const [open, setOpen] = useState(!!stored)
+  const [saved, setSaved] = useState(true)
+  const pending = useRef<string | null>(null)
+  pending.current = text === stored ? null : text
+
+  // never lose the last keystrokes when leaving the page or marking the episode as watched
+  const flush = () => { if (pending.current !== null) setDraft(season.season, ep.n, pending.current) }
+  const flushRef = useRef(flush)
+  flushRef.current = flush
+  useEffect(() => () => flushRef.current(), [])
+
+  // pick up notes arriving from another device while the field is not being edited
+  useEffect(() => { if (saved) setText(stored) }, [stored, saved])
+
+  useEffect(() => {
+    if (text === stored) { setSaved(true); return }
+    setSaved(false)
+    const t = setTimeout(() => { setDraft(season.season, ep.n, text); setSaved(true) }, 600)
+    return () => clearTimeout(t)
+  }, [text, stored, season.season, ep.n, setDraft])
+
+  const name = isReunion(ep.label) ? 'Reunion' : `Folge ${ep.n}`
+  return (
+    <section className="glass p-4 sm:p-5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <NotebookPen size={18} className="shrink-0 text-ember" />
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold">Notizen zu {name}</div>
+          <div className="truncate text-xs text-stone-500">{hideTitles ? 'Für unterwegs beim Schauen – ohne Spoiler' : ep.title}</div>
+        </div>
+        {!open && (
+          <button onClick={() => setOpen(true)} className="rounded-xl bg-white/10 px-3 py-1.5 text-sm font-semibold hover:bg-white/20">Notiz schreiben</button>
+        )}
+      </div>
+      {open && (
+        <div className="mt-3 space-y-2">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            rows={4}
+            autoFocus={!stored}
+            placeholder="Was dir beim Schauen auffällt … (wird automatisch gespeichert)"
+            className="w-full resize-y rounded-xl border border-white/10 bg-black/30 p-3 text-sm outline-none placeholder:text-stone-500 focus:border-ember/60"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-stone-500">{saved ? (text.trim() ? '✓ gespeichert' : '') : 'speichert …'}</span>
+            <button onClick={() => { flush(); onWatched() }} className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-ember to-flame px-3 py-1.5 text-sm font-bold text-stone-950">
+              <Check size={15} /> {name} gesehen – jetzt bewerten
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}

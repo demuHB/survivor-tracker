@@ -22,12 +22,12 @@ export function Rankings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-5xl tracking-wide">Rankings</h1>
+        <h1 className="font-display text-4xl tracking-wide sm:text-5xl">Rankings</h1>
         <p className="text-stone-400">Deine bestbewerteten Folgen, Staffel-Durchschnitte und dein persönliches All-Time-Ranking.</p>
       </div>
-      <div className="flex w-fit gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+      <div className="flex max-w-full gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] p-1 scrollbar-thin sm:w-fit">
         {([['episodes', 'Top-Folgen', <Star size={15} />], ['seasons', 'Staffeln nach Ø', <BarChart3 size={15} />], ['mine', 'Mein Staffel-Ranking', <ListOrdered size={15} />]] as const).map(([k, l, i]) => (
-          <button key={k} onClick={() => switchTab(k)} className={`relative flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold ${tab === k ? 'text-stone-950' : 'text-stone-400 hover:text-white'}`}>
+          <button key={k} onClick={() => switchTab(k)} className={`relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold sm:px-4 ${tab === k ? 'text-stone-950' : 'text-stone-400 hover:text-white'}`}>
             {tab === k && <motion.span layoutId="rtab" className="absolute inset-0 rounded-xl bg-gradient-to-r from-ember to-flame" />}
             <span className="relative flex items-center gap-1.5">{i}{l}</span>
           </button>
@@ -66,7 +66,7 @@ function TopEpisodes({ index }: { index: SeasonIndexEntry[] }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <select value={seasonFilter ?? ''} onChange={e => setParams(p => { if (e.target.value) p.set('season', e.target.value); else p.delete('season'); return p })}
-          className="rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm outline-none">
+          className="w-full rounded-xl border border-white/10 bg-stone-900 px-3 py-2 text-sm outline-none sm:w-auto">
           <option value="">Alle Staffeln</option>
           {ratedSeasons.map(s => <option key={s} value={s}>Staffel {s} – {shortName(byNum.get(s)?.name ?? '')}</option>)}
         </select>

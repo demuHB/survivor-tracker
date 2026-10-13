@@ -41,14 +41,14 @@ export function Home() {
 
   return (
     <div className="space-y-10">
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-orange-950/60 via-stone-950 to-emerald-950/40 p-8 md:p-12">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-orange-950/60 via-stone-950 to-emerald-950/40 p-5 sm:p-8 md:p-12">
         <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-ember/20 blur-3xl" />
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-ember">Outwit · Outplay · Outlast</p>
-        <h1 className="mt-2 font-display text-5xl tracking-wide md:text-7xl">Dein Survivor-Logbuch</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ember sm:text-sm sm:tracking-[0.3em]">Outwit · Outplay · Outlast</p>
+        <h1 className="mt-2 font-display text-4xl tracking-wide sm:text-5xl md:text-7xl">Dein Survivor-Logbuch</h1>
         <p className="mt-3 max-w-2xl text-stone-400">
           Hake gesehene Folgen ab und sieh den Stand des Spiels – Tribes, Idols, Tribal Councils – exakt bis zum Ende deiner letzten Folge. Kein Spoiler mehr.
         </p>
-        <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
+        <div className="mt-8 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
           <Stat label="Folgen gesehen" value={totalWatched} />
           <Stat label="Bewertungen" value={allScores.length} />
           <Stat label="Ø Bewertung" value={globalAvg ? globalAvg.toFixed(1) : '–'} />
@@ -60,7 +60,7 @@ export function Home() {
           <h2 className="mb-3 font-display text-3xl tracking-wide">Weiterschauen</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
             {continueWatching.map(s => (
-              <Link key={s.season} to={`/season/${s.season}`} className="glass group flex min-w-72 items-center gap-4 p-4 transition hover:border-ember/50">
+              <Link key={s.season} to={`/season/${s.season}`} className="glass group flex min-w-64 items-center gap-4 p-4 sm:min-w-72 transition hover:border-ember/50">
                 <span className="font-display text-4xl text-gradient">{s.season}</span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-semibold">{shortName(s.name)}</div>
@@ -76,13 +76,13 @@ export function Home() {
       <section>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h2 className="mr-auto font-display text-3xl tracking-wide">Alle Staffeln</h2>
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
             <input
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="Staffel, Ort …"
-              className="w-56 rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm outline-none focus:border-ember/60"
+              className="w-full rounded-xl border sm:w-56 border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm outline-none focus:border-ember/60"
             />
           </div>
           <div className="flex rounded-xl border border-white/10 bg-white/5 p-1 text-sm">
@@ -136,9 +136,9 @@ export function Home() {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="glass p-4">
-      <div className="font-display text-4xl tracking-wide">{value}</div>
-      <div className="text-xs uppercase tracking-wider text-stone-400">{label}</div>
+    <div className="glass min-w-0 p-3 sm:p-4">
+      <div className="font-display text-3xl tracking-wide sm:text-4xl">{value}</div>
+      <div className="text-[11px] leading-tight text-stone-400 [overflow-wrap:anywhere] sm:text-xs sm:uppercase sm:tracking-wider">{label}</div>
     </div>
   )
 }

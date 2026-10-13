@@ -1,9 +1,9 @@
 name: Update Survivor data
 
-# Pulls new episodes from the survivoR dataset once a week and redeploys.
+# Pulls new episodes from the survivoR dataset daily and redeploys.
 on:
   schedule:
-    - cron: '0 6 * * 5' # Fridays 06:00 UTC
+    - cron: '0 6 * * *' # daily 06:00 UTC (only commits when something changed)
   workflow_dispatch:
 
 permissions:

@@ -54,6 +54,7 @@ function getEntry(d: UserData, key: string): unknown {
     case 'r': return d.ratings[id]
     case 'sr': return d.seasonRatings[Number(id)]
     case 'tl': return d.threadLinks[id]
+    case 'n': return d.drafts?.[id]
     case 'rank': return d.seasonRanking.length ? d.seasonRanking : undefined
     case 'opt': return d.hideUnwatchedTitles
   }
@@ -70,12 +71,13 @@ function setEntry(d: UserData, key: string, value: unknown) {
     case 'r': put(d.ratings, id); break
     case 'sr': put(d.seasonRatings, Number(id)); break
     case 'tl': put(d.threadLinks, id); break
+    case 'n': put(d.drafts, id); break
     case 'rank': d.seasonRanking = (value as number[] | undefined) ?? []; break
     case 'opt': d.hideUnwatchedTitles = (value as boolean | undefined) ?? true; break
   }
 }
 
-const empty = (): UserData => ({ watched: {}, ratings: {}, seasonRatings: {}, seasonRanking: [], threadLinks: {}, hideUnwatchedTitles: true, stamps: {} })
+const empty = (): UserData => ({ watched: {}, ratings: {}, seasonRatings: {}, seasonRanking: [], threadLinks: {}, hideUnwatchedTitles: true, drafts: {}, stamps: {} })
 
 /** Entry-wise last-write-wins merge of two devices' data. */
 export function merge(local: UserData, remote: UserData): UserData {

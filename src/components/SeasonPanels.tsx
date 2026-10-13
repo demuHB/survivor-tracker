@@ -120,13 +120,13 @@ export function TribalCard({ t, state, season }: { t: Tribal; state: SeasonState
         {sorted.map(([k, v]) => {
           const voters = t.votes.filter(x => (x.target ?? x.targetName) === k)
           return (
-            <div key={k} className="grid grid-cols-[6rem_1fr] items-center gap-3 text-sm">
+            <div key={k} className="grid grid-cols-[5rem_1fr] items-center gap-2 text-sm sm:grid-cols-[6rem_1fr] sm:gap-3">
               <span className={`truncate font-semibold ${t.votedOut.includes(k) ? 'text-red-400' : ''}`}>{v.name}</span>
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
                 <div className="h-6 overflow-hidden rounded-md bg-white/5" style={{ width: `${((v.count + v.nullified) / max) * 100}%`, minWidth: '1.5rem' }}>
                   <div className="flex h-full items-center bg-gradient-to-r from-red-600/80 to-ember/80 px-2 text-xs font-bold" style={{ width: `${(v.count / Math.max(1, v.count + v.nullified)) * 100}%` }}>{v.count}</div>
                 </div>
-                <span className="truncate text-xs text-stone-500">{voters.map(x => name(x.voter) + (x.nullified ? ' ✕' : '')).join(', ')}</span>
+                <span className="min-w-0 basis-full text-xs text-stone-500 sm:flex-1 sm:basis-auto sm:truncate">{voters.map(x => name(x.voter) + (x.nullified ? ' ✕' : '')).join(', ')}</span>
               </div>
             </div>
           )
@@ -311,7 +311,7 @@ export function CastGallery({ state, season, horizon }: { state: SeasonState; se
               )}
             </div>
             <div className="space-y-0.5 p-3 text-xs text-stone-400">
-              <div>{[x.c.age && `${x.c.age} J.`, x.c.occupation].filter(Boolean).join(' · ')}</div>
+              <div className="[overflow-wrap:anywhere]">{[x.c.age && `${x.c.age} J.`, x.c.occupation].filter(Boolean).join(' · ')}</div>
               <div className="truncate">{x.c.hometown}</div>
             </div>
           </button>

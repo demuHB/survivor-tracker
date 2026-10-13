@@ -67,7 +67,8 @@ async function resolveImages(castaways) {
   let cache = {}
   try { cache = JSON.parse(await fs.readFile(IMG_CACHE, 'utf8')) } catch { /* empty */ }
   const key = c => `${c.season}|${c.full_name}`
-  const todo = castaways.filter(c => !(key(c) in cache))
+  // missing photos (null) are retried on every run – the wiki often uploads them after a premiere
+  const todo = castaways.filter(c => !cache[key(c)])
   console.log('images to resolve:', todo.length)
   const fileTitle = (c, ext) => `File:S${c.season}_${c.full_name.replace(/ /g, '_')}.${ext}`
 

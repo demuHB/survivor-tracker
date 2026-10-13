@@ -7,6 +7,11 @@ export interface Rating {
   updatedAt: string
 }
 
+export interface Draft {
+  text: string
+  updatedAt: string
+}
+
 /** Everything that is synced between devices. */
 export interface UserData {
   /** season -> watched episode numbers */
@@ -20,6 +25,8 @@ export interface UserData {
   /** `${season}-${episode}` -> saved reddit thread url */
   threadLinks: Record<string, string>
   hideUnwatchedTitles: boolean
+  /** `${season}-${episode}` -> notes written while watching, before the episode is rated */
+  drafts: Record<string, Draft>
   /**
    * Last-modified time per entry ("w:40", "r:40-3", "sr:40", "tl:40-3", "rank", "opt:hide").
    * Lets the sync merge two devices entry by entry; a stamp without a value is a deletion.
@@ -36,6 +43,7 @@ interface UserState extends UserData {
   setRanking: (ranking: number[]) => void
   setThreadLink: (season: number, ep: number, url: string) => void
   setHideUnwatchedTitles: (v: boolean) => void
+  setDraft: (season: number, ep: number, text: string) => void
   importData: (data: unknown) => void
 }
 
@@ -46,7 +54,7 @@ const stamp = (s: UserData, ...keys: string[]) => {
   return { ...s.stamps, ...Object.fromEntries(keys.map(k => [k, now])) }
 }
 
-export const DATA_KEYS = ['watched', 'ratings', 'seasonRatings', 'seasonRanking', 'threadLinks', 'hideUnwatchedTitles', 'stamps'] as const
+export const DATA_KEYS = ['watched', 'ratings', 'seasonRatings', 'seasonRanking', 'threadLinks', 'hideUnwatchedTitles', 'drafts', 'stamps'] as const
 
 export function pickData(s: UserData): UserData {
   return Object.fromEntries(DATA_KEYS.map(k => [k, s[k]])) as unknown as UserData
@@ -59,6 +67,7 @@ export function entryKeys(d: UserData) {
     ...Object.keys(d.ratings).map(k => `r:${k}`),
     ...Object.keys(d.seasonRatings).map(s => `sr:${s}`),
     ...Object.keys(d.threadLinks).map(k => `tl:${k}`),
+    ...Object.keys(d.drafts ?? {}).map(k => `n:${k}`),
     ...(d.seasonRanking.length ? ['rank'] : []),
     'opt:hide',
   ]
@@ -73,6 +82,7 @@ export const useUserStore = create<UserState>()(
       seasonRanking: [],
       threadLinks: {},
       hideUnwatchedTitles: true,
+      drafts: {},
       stamps: {},
 
       watchUpTo: (season, ep, allEps) => set(s => ({
@@ -90,10 +100,16 @@ export const useUserStore = create<UserState>()(
       rate: (season, ep, score, text) => set(s => {
         const k = epKey(season, ep)
         const alreadyWatched = (s.watched[season] ?? []).includes(ep)
+        // the rating text takes over the notes written while watching
+        const drafts = { ...s.drafts }
+        const hadDraft = k in drafts
+        delete drafts[k]
+        const keys = [`r:${k}`, ...(alreadyWatched ? [] : [`w:${season}`]), ...(hadDraft ? [`n:${k}`] : [])]
         return {
           ratings: { ...s.ratings, [k]: { score, text, updatedAt: new Date().toISOString() } },
           watched: alreadyWatched ? s.watched : { ...s.watched, [season]: [...(s.watched[season] ?? []), ep].sort((a, b) => a - b) },
-          stamps: alreadyWatched ? stamp(s, `r:${k}`) : stamp(s, `r:${k}`, `w:${season}`),
+          drafts,
+          stamps: stamp(s, ...keys),
         }
       }),
       clearRating: (season, ep) => set(s => {
@@ -113,6 +129,13 @@ export const useUserStore = create<UserState>()(
         return { threadLinks, stamps: stamp(s, `tl:${epKey(season, ep)}`) }
       }),
       setHideUnwatchedTitles: hideUnwatchedTitles => set(s => ({ hideUnwatchedTitles, stamps: stamp(s, 'opt:hide') })),
+      setDraft: (season, ep, text) => set(s => {
+        const k = epKey(season, ep)
+        const drafts = { ...s.drafts }
+        if (text.trim()) drafts[k] = { text, updatedAt: new Date().toISOString() }
+        else delete drafts[k]
+        return { drafts, stamps: stamp(s, `n:${k}`) }
+      }),
       importData: data => {
         const d = data as Partial<UserData>
         if (!d || typeof d !== 'object' || !('ratings' in d)) throw new Error('Ungültige Datei')
@@ -123,6 +146,7 @@ export const useUserStore = create<UserState>()(
           seasonRanking: d.seasonRanking ?? [],
           threadLinks: d.threadLinks ?? {},
           hideUnwatchedTitles: d.hideUnwatchedTitles ?? true,
+          drafts: d.drafts ?? {},
           stamps: {},
         }
         // an import is a deliberate overwrite: it wins against every other device
@@ -134,9 +158,9 @@ export const useUserStore = create<UserState>()(
 )
 
 export function exportUserData() {
-  const { watched, ratings, seasonRatings, seasonRanking, threadLinks, hideUnwatchedTitles } = useUserStore.getState()
+  const { watched, ratings, seasonRatings, seasonRanking, threadLinks, hideUnwatchedTitles, drafts } = useUserStore.getState()
   const blob = new Blob(
-    [JSON.stringify({ app: 'survivor-tracker', exportedAt: new Date().toISOString(), watched, ratings, seasonRatings, seasonRanking, threadLinks, hideUnwatchedTitles }, null, 2)],
+    [JSON.stringify({ app: 'survivor-tracker', exportedAt: new Date().toISOString(), watched, ratings, seasonRatings, seasonRanking, threadLinks, hideUnwatchedTitles, drafts }, null, 2)],
     { type: 'application/json' },
   )
   const a = document.createElement('a')
