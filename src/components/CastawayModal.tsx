@@ -17,7 +17,13 @@ export function CastawayModal({ c, season, reveal, onClose }: { c: Castaway; sea
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    // keep the page behind still so swipes scroll the popup
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
   }, [onClose])
 
   const color = season.tribes[c.originalTribe ?? ''] ?? '#78716c'
@@ -39,25 +45,25 @@ export function CastawayModal({ c, season, reveal, onClose }: { c: Castaway; sea
       <motion.div
         initial={{ scale: 0.94, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 12 }}
         onClick={e => e.stopPropagation()}
-        className="relative grid max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-stone-900 shadow-2xl md:grid-cols-[320px_1fr]"
+        className="relative grid max-h-[90dvh] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-3xl border border-white/10 bg-stone-900 shadow-2xl md:grid-cols-[320px_1fr] md:overflow-hidden"
       >
-        <button onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-black/50 p-2 text-stone-300 hover:text-white" aria-label="Schließen"><X size={18} /></button>
-        <div className="relative aspect-[4/5] md:aspect-auto md:h-full" style={{ background: color }}>
+        <button onClick={onClose} className="absolute right-3 top-3 z-10 rounded-full bg-black/60 p-2.5 backdrop-blur text-stone-300 hover:text-white" aria-label="Schließen"><X size={18} /></button>
+        <div className="relative h-[42dvh] shrink-0 md:h-full" style={{ background: color }}>
           {reveal && bigImage
             ? <img src={bigImage} alt={c.fullName} referrerPolicy="no-referrer" className="h-full w-full object-cover object-top" />
             : <Mystery />}
         </div>
-        <div className="space-y-5 overflow-y-auto p-6">
+        <div className="space-y-5 p-5 sm:p-6 md:overflow-y-auto">
           <div>
             {c.originalTribe && <span className="chip mb-2" style={{ background: color, color: contrastText(color) }}>{c.originalTribe}</span>}
             <h2 className="font-display text-5xl leading-none tracking-wide">{c.name}</h2>
             <div className="text-stone-400">{c.fullName}</div>
           </div>
-          <dl className="grid gap-3 sm:grid-cols-2">
+          <dl className="grid grid-cols-2 gap-2 sm:gap-3">
             {facts.map(f => (
               <div key={f.label} className="rounded-xl bg-white/[0.04] p-3">
                 <dt className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-stone-500"><span className="text-ember">{f.icon}</span>{f.label}</dt>
-                <dd className="mt-0.5 font-semibold">{f.value}</dd>
+                <dd className="mt-0.5 font-semibold [overflow-wrap:anywhere]">{f.value}</dd>
               </div>
             ))}
           </dl>
