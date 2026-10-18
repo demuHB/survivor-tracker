@@ -115,6 +115,10 @@ const details = new Map(D.castaway_details.map(d => [d.castaway_id, d]))
 const seasonNames = new Map(D.season_summary.map(s => [s.season, s.season_name]))
 // r/survivor discussion links per episode, collected by scripts/fetch-reddit-threads.mjs
 let redditThreads = {}
+// fan favorite award winners from the Survivor Wiki, collected by scripts/fetch-fan-favorites.mjs
+let fanFavorites = {}
+try { fanFavorites = JSON.parse(await fs.readFile(path.join(ROOT, 'scripts', 'fan-favorites.json'), 'utf8')) } catch { /* optional */ }
+const normName = s => s.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '')
 try { redditThreads = JSON.parse(await fs.readFile(path.join(ROOT, 'scripts', 'reddit-threads.json'), 'utf8')) } catch { /* optional */ }
 const imageOf = await resolveImages(D.castaways)
 
@@ -257,12 +261,28 @@ for (const ss of D.season_summary.sort((a, b) => a.season - b.season)) {
     }
   }).sort((a, b) => a.ep - b.ep || a.id - b.id)
 
+  // fan favorite: match wiki names to this season's castaways (exact, else same last name + first initial)
+  const findCastaway = name => {
+    const exact = castaways.find(c => normName(c.fullName) === normName(name))
+    if (exact) return exact.id
+    const lastOf = full => normName(full.replace(/,?\s+(jr|sr|ii|iii)\.?$/i, '').split(' ').slice(-1)[0])
+    const first = normName(name.split(' ')[0])
+    const sameLast = castaways.filter(c => lastOf(c.fullName) === lastOf(name))
+    // nickname ("Bob" Crowley = Robert Crowley, "J.T." Thomas = James Thomas Jr.) or same first initial
+    return (sameLast.find(c => normName(c.name) === first) ?? sameLast.find(c => normName(c.fullName)[0] === first[0]))?.id ?? null
+  }
+  const ff = fanFavorites[n]
+  const fanFavorite = ff && findCastaway(ff.winner)
+    ? { winner: findCastaway(ff.winner), runnersUp: ff.runnersUp.map(findCastaway).filter(Boolean), prize: ff.prize }
+    : null
+  if (ff && !fanFavorite) console.warn('fan favorite not matched', n, ff.winner)
+
   const juryVotes = get('jury_votes').map(j => ({ juror: j.castaway_id, finalist: j.finalist_id, vote: j.vote }))
 
   const season = {
     season: n, name: ss.season_name, location: ss.location, country: ss.country, premiered: ss.premiered,
     tribeSetup: ss.tribe_setup, description: ss.description ?? null, nCast: ss.n_cast, palette, tribes,
-    episodes, castaways, tribeTimeline, snaps, tribals, events, advantages, challenges, juryVotes,
+    episodes, castaways, tribeTimeline, snaps, tribals, events, advantages, challenges, juryVotes, fanFavorite,
   }
   await fs.writeFile(path.join(OUT, 'seasons', `${n}.json`), JSON.stringify(season))
   index.push({

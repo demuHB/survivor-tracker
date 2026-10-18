@@ -46,8 +46,9 @@ export function Layout() {
               <button onClick={() => setMenu(m => !m)} className="rounded-xl p-2 text-stone-400 hover:bg-white/5 hover:text-white" aria-label="Einstellungen">
                 <Settings2 size={18} />
               </button>
+              {menu && <div className="fixed inset-0 z-40" onClick={() => setMenu(false)} aria-hidden />}
               {menu && (
-                <div className="glass absolute right-0 mt-2 w-72 space-y-1 bg-stone-900/95 p-2 shadow-2xl" onMouseLeave={() => setMenu(false)}>
+                <div className="absolute right-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] space-y-1 rounded-2xl border border-white/10 bg-stone-900 p-2 shadow-2xl shadow-black/60" onMouseLeave={() => setMenu(false)}>
                   <label className="flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm hover:bg-white/5">
                     Titel ungesehener Folgen verbergen
                     <input type="checkbox" checked={hideTitles} onChange={e => setHideTitles(e.target.checked)} className="accent-orange-500" />

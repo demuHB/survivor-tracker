@@ -3,14 +3,14 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Calendar, Check, CheckCheck, ChevronRight, Clock, ExternalLink, Eye, Gavel, Gem, Link2, Lock, MapPin,
-  MessageSquare, NotebookPen, Shield, Skull, Sparkles, Star, Users,
+  Heart, MessageSquare, NotebookPen, Shield, Trophy, Skull, Sparkles, Star, Users,
 } from 'lucide-react'
 import { formatDate, isReunion, shortName, useSeason } from '../lib/data'
 import { computeStateAt } from '../lib/spoilerState'
 import { epKey, horizonOf, useUserStore } from '../store/useUserStore'
 import { RatingInput, ScoreBadge } from '../components/RatingInput'
 import {
-  AdvantagesPanel, CastGallery, ChallengesPanel, EliminatedList, EpisodeRecap, JuryPanel, SectionTitle, TribalHistory, TribeBoard,
+  AdvantagesPanel, CastGallery, ChallengesPanel, EliminatedList, EpisodeRecap, FanFavorite, FinalVote, JuryPanel, SectionTitle, TribalHistory, TribeBoard,
 } from '../components/SeasonPanels'
 import { Progress } from './Home'
 import type { Castaway, EpisodeInfo, SeasonData } from '../types'
@@ -162,6 +162,18 @@ function SeasonView({ season }: { season: SeasonData }) {
                   <div>
                     <SectionTitle icon={<Sparkles size={20} />}>Was in Folge {viewEp} passiert ist</SectionTitle>
                     <EpisodeRecap state={state} />
+                  </div>
+                )}
+                {state.finished && season.juryVotes.length > 0 && (
+                  <div>
+                    <SectionTitle icon={<Trophy size={20} />}>Finale Jury-Abstimmung</SectionTitle>
+                    <FinalVote state={state} season={season} />
+                  </div>
+                )}
+                {season.fanFavorite && viewEp === (season.episodes.find(e => isReunion(e.label))?.n ?? lastMainEp) && (
+                  <div>
+                    <SectionTitle icon={<Heart size={20} />}>Fan-Voting</SectionTitle>
+                    <FanFavorite state={state} season={season} />
                   </div>
                 )}
                 <div>

@@ -130,4 +130,6 @@ export interface SeasonData {
   advantages: Advantage[]
   challenges: Challenge[]
   juryVotes: JuryVote[]
+  /** fan favorite award (only some seasons had one) – castaway ids */
+  fanFavorite?: { winner: string; runnersUp: string[]; prize: string | null } | null
 }

@@ -322,3 +322,77 @@ export function CastGallery({ state, season, horizon }: { state: SeasonState; se
 }
 
 
+
+/** The jury's final vote – only rendered once the finale has been watched. */
+export function FinalVote({ state, season }: { state: SeasonState; season: SeasonData }) {
+  const votes = season.juryVotes.filter(v => v.vote === 1)
+  if (!state.finished || !votes.length) return null
+  const finalists = [...new Set(season.juryVotes.map(v => v.finalist))]
+    .map(id => ({ id, x: state.byId.get(id), n: votes.filter(v => v.finalist === id).length }))
+    .filter(f => f.x)
+    .sort((a, b) => b.n - a.n)
+  const max = Math.max(1, ...finalists.map(f => f.n))
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2.5">
+        {finalists.map(f => {
+          const won = f.x!.c.winner
+          return (
+            <div key={f.id} className={`flex items-center gap-3 rounded-2xl p-2.5 ${won ? 'bg-flame/15 ring-1 ring-flame/50' : 'bg-white/[0.03]'}`}>
+              <Avatar c={f.x!.c} size={52} color={won ? '#fbbf24' : '#78716c'} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span className="font-semibold">{f.x!.c.name}</span>
+                  {won && <span className="chip shrink-0 bg-flame text-stone-950"><Trophy size={11} /> Sole Survivor</span>}
+                </div>
+                <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-white/10">
+                  <div className={`h-full rounded-full ${won ? 'bg-gradient-to-r from-ember to-flame' : 'bg-stone-500'}`} style={{ width: `${(f.n / max) * 100}%` }} />
+                </div>
+              </div>
+              <span className={`w-10 text-right font-display text-3xl ${won ? 'text-flame' : 'text-stone-400'}`}>{f.n}</span>
+            </div>
+          )
+        })}
+      </div>
+      <div>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-500">Wer hat für wen gestimmt</div>
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {votes.map(v => {
+            const juror = state.byId.get(v.juror)
+            const fin = state.byId.get(v.finalist)
+            if (!juror || !fin) return null
+            return (
+              <div key={v.juror + v.finalist} className="flex min-w-0 items-center gap-2 rounded-xl bg-white/[0.03] px-2 py-1.5 text-sm">
+                <Avatar c={juror.c} size={28} color="#8b5cf6" />
+                <span className="min-w-0 truncate">{juror.c.name}</span>
+                <span className="text-stone-500">→</span>
+                <span className={`min-w-0 truncate font-semibold ${fin.c.winner ? 'text-flame' : ''}`}>{fin.c.name}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Fan favorite award (revealed at the reunion; only some seasons had one). */
+export function FanFavorite({ state, season }: { state: SeasonState; season: SeasonData }) {
+  const ff = season.fanFavorite
+  const winner = ff && state.byId.get(ff.winner)
+  if (!ff || !winner) return null
+  const others = ff.runnersUp.map(id => state.byId.get(id)).filter(Boolean)
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-gradient-to-r from-pink-500/15 via-fuchsia-500/10 to-transparent p-4 ring-1 ring-pink-400/30">
+      <Avatar c={winner.c} size={64} color="#f472b6" />
+      <div className="min-w-0 flex-1">
+        <div className="text-xs font-semibold uppercase tracking-wider text-pink-300">Fan-Favorit {season.season === 8 ? "(America's Tribal Council)" : ''}</div>
+        <div className="font-display text-3xl leading-tight tracking-wide">{winner.c.name}</div>
+        <div className="text-sm text-stone-400">
+          {ff.prize && <>Preis: <b className="text-stone-200">{ff.prize}</b></>}
+          {others.length > 0 && <> · knapp dahinter: {others.map(x => x!.c.name).join(', ')}</>}
+        </div>
+      </div>
+    </div>
+  )
+}
